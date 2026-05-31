@@ -248,8 +248,8 @@ export default function BranchesPage({ embedded = false }) {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">Branches</h1>
-          <p className="text-sm text-slate-400 mt-0.5">Manage all your business branches</p>
+          <h1 className="text-xl px-3 font-bold text-slate-800">Branches</h1>
+          <p className="text-sm px-3 text-slate-400 mt-0.5">Manage all your business branches</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}

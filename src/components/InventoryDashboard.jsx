@@ -111,6 +111,13 @@ const navGroups = [
   },
 ];
 
+const visibleNavGroups = navGroups
+  .map((group) => ({
+    ...group,
+    items: group.items.filter((item) => ["dashboard", "branches", "products", "categories"].includes(item.id)),
+  }))
+  .filter((group) => group.items.length > 0);
+
 const statCards = [
   { label: "Total Products", value: "1,284", change: "+12", up: true, icon: Package, iconBg: "bg-blue-100", iconColor: "text-blue-600", sub: "across all branches" },
   { label: "Pending POs", value: "23", change: "+5", up: true, icon: ClipboardList, iconBg: "bg-amber-100", iconColor: "text-amber-600", sub: "awaiting approval" },
@@ -180,7 +187,7 @@ export default function InventoryDashboard({ activePage = "dashboard", onNavigat
 
           {/* Nav */}
           <nav className="nav-scrollbar px-2 pt-3 overflow-y-auto flex-1 space-y-1 pb-4">
-            {navGroups.map((group) => (
+            {visibleNavGroups.map((group) => (
               <div key={group.label} className="mb-1">
                 {sidebarOpen && (
                   <button

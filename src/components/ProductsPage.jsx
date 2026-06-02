@@ -10,6 +10,7 @@ import {
 
 // ── Mock Data ──────────────────────────────────────────────
 const brands = ["Nike", "Adidas", "Samsung", "Apple", "Generic"];
+const suppliers = ["ABC Traders", "XYZ Supplies", "Global Imports", "Local Mart", "Premium Distributors"];
 const mainCategories = ["Electronics", "Clothing", "Footwear", "Accessories", "Health"];
 const subCategories = {
   Electronics: ["Mobile", "Laptop", "Audio"],
@@ -39,8 +40,8 @@ const mockProducts = [
     is_active: true,
     is_default: true,
     variants: [
-      { id: 1, sku: "SKU-001-BLK", barcode: "8901234567890", code: "V001", color: "Black", size: "One Size", material: "Plastic", style: "Over-ear", is_default: true, is_active: true },
-      { id: 2, sku: "SKU-001-WHT", barcode: "8901234567891", code: "V002", color: "White", size: "One Size", material: "Plastic", style: "Over-ear", is_default: false, is_active: true },
+      { id: 1, sku: "SKU-001-BLK", barcode: "8901234567890", code: "V001", color: "Black", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "ABC Traders", is_default: true, is_active: true },
+      { id: 2, sku: "SKU-001-WHT", barcode: "8901234567891", code: "V002", color: "White", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "XYZ Supplies", is_default: false, is_active: true },
     ],
   },
   {
@@ -59,9 +60,9 @@ const mockProducts = [
     is_active: true,
     is_default: false,
     variants: [
-      { id: 3, sku: "SKU-002-SM", barcode: "8901234567892", code: "V003", color: "Red", size: "S", material: "Cotton", style: "Casual", is_default: true, is_active: true },
-      { id: 4, sku: "SKU-002-MD", barcode: "8901234567893", code: "V004", color: "Red", size: "M", material: "Cotton", style: "Casual", is_default: false, is_active: true },
-      { id: 5, sku: "SKU-002-LG", barcode: "8901234567894", code: "V005", color: "Blue", size: "L", material: "Cotton", style: "Casual", is_default: false, is_active: false },
+      { id: 3, sku: "SKU-002-SM", barcode: "8901234567892", code: "V003", color: "Red", size: "S", material: "Cotton", style: "Casual", supplier_id: "Global Imports", is_default: true, is_active: true },
+      { id: 4, sku: "SKU-002-MD", barcode: "8901234567893", code: "V004", color: "Red", size: "M", material: "Cotton", style: "Casual", supplier_id: "Local Mart", is_default: false, is_active: true },
+      { id: 5, sku: "SKU-002-LG", barcode: "8901234567894", code: "V005", color: "Blue", size: "L", material: "Cotton", style: "Casual", supplier_id: "ABC Traders", is_default: false, is_active: false },
     ],
   },
   {
@@ -180,6 +181,7 @@ const VariantRow = ({ variant, onRemove, onChange }) => (
       <FormField label="Size" placeholder="M / 42" value={variant.size} onChange={e => onChange("size", e.target.value)} />
       <FormField label="Material" placeholder="Cotton" value={variant.material} onChange={e => onChange("material", e.target.value)} />
       <FormField label="Style" icon={Shirt} placeholder="Casual" value={variant.style} onChange={e => onChange("style", e.target.value)} />
+      <SelectField label="Supplier" options={suppliers} value={variant.supplier_id} onChange={e => onChange("supplier_id", e.target.value)} />
       <div className="flex items-center gap-4 col-span-2 pt-3">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={variant.is_default} onChange={e => onChange("is_default", e.target.checked)} className="w-4 h-4 accent-blue-600" />
@@ -202,7 +204,7 @@ const emptyProduct = {
   is_variant: false, is_active: true, is_default: false,
   variants: [],
 };
-const emptyVariant = { sku: "", barcode: "", code: "", color: "", size: "", material: "", style: "", is_default: false, is_active: true };
+const emptyVariant = { sku: "", barcode: "", code: "", color: "", size: "", material: "", style: "", supplier_id: "", is_default: false, is_active: true };
 
 // ── Main Page ──────────────────────────────────────────────
 export default function ProductsPage({ embedded = false }) {
@@ -210,7 +212,7 @@ export default function ProductsPage({ embedded = false }) {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddPage, setShowAddPage] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -257,7 +259,7 @@ export default function ProductsPage({ embedded = false }) {
 
   const handleAdd = () => {
     setProducts([...products, { ...form, id: Date.now() }]);
-    setShowAddModal(false);
+    setShowAddPage(false);
     setForm(emptyProduct);
   };
 
@@ -362,6 +364,35 @@ export default function ProductsPage({ embedded = false }) {
     </>
   );
 
+  // If showing the add product page, render as full-page form
+  if (showAddPage) {
+    return (
+      <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => { setShowAddPage(false); setForm(emptyProduct); }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition"
+          >
+            <ChevronLeft size={16} /> Back to Products
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Add New Product</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Create a new product with variants</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <ProductForm
+            data={form} setData={setForm}
+            onSave={handleAdd}
+            onCancel={() => { setShowAddPage(false); setForm(emptyProduct); }}
+            saveLabel="Add Product"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`${embedded ? "p-5 min-h-full" : "p-6 min-h-screen"} bg-gray-50`} style={{ fontFamily: "'Segoe UI', sans-serif" }}>
 
@@ -372,7 +403,7 @@ export default function ProductsPage({ embedded = false }) {
           <p className="text-sm text-slate-400 mt-0.5">Manage products and variants</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => setShowAddPage(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200"
         >
           <Plus size={16} /> Add Product
@@ -441,7 +472,7 @@ export default function ProductsPage({ embedded = false }) {
           <thead>
             <tr className="bg-gray-50 text-left">
               <th className="px-4 py-3 w-8"></th>
-              {["Product", "Code", "Category", "Brand", "Unit", "Variant", "Status", "Actions"].map(h => (
+              {["Product", "Code", "Category", "Brand", "Unit", "Variant", "Suppliers", "Status", "Actions"].map(h => (
                 <th key={h} className="px-4 py-3 text-sm font-semibold text-slate-700 uppercase tracking-wide whitespace-nowrap">
                   <div className="flex items-center gap-1">{h} <ArrowUpDown size={10} className="text-gray-300" /></div>
                 </th>
@@ -484,6 +515,14 @@ export default function ProductsPage({ embedded = false }) {
                           {p.variants.length}
                         </span>
                       : <span className="text-sm text-slate-600">No variants</span>
+                    }
+                  </td>
+                  <td className="px-4 py-3">
+                    {p.is_variant && p.variants.length > 0
+                      ? <div className="text-sm text-slate-700">
+                          {Array.from(new Set(p.variants.map(v => v.supplier_id).filter(Boolean))).join(", ") || "—"}
+                        </div>
+                      : <span className="text-sm text-slate-600">—</span>
                     }
                   </td>
                   <td className="px-4 py-3"><Badge active={p.is_active} /></td>
@@ -568,16 +607,7 @@ export default function ProductsPage({ embedded = false }) {
         </div>
       </div>
 
-      {/* ── Add Modal ── */}
-      {showAddModal && (
-        <Modal title="Add New Product" onClose={() => setShowAddModal(false)} wide>
-          <ProductForm
-            data={form} setData={setForm}
-            onSave={handleAdd} onCancel={() => setShowAddModal(false)}
-            saveLabel="Add Product"
-          />
-        </Modal>
-      )}
+
 
       {/* ── Edit Modal ── */}
       {showEditModal && selectedProduct && (

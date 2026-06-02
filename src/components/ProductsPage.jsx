@@ -468,7 +468,8 @@ export default function ProductsPage({ embedded = false }) {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-max">
           <thead>
             <tr className="bg-gray-50 text-left">
               <th className="px-4 py-3 w-8"></th>
@@ -575,6 +576,7 @@ export default function ProductsPage({ embedded = false }) {
             ))}
           </tbody>
         </table>
+        </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">

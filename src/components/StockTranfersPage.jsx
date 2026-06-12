@@ -130,7 +130,8 @@ export default function StockTransfersPage({ embedded }) {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-100">
               <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Transfer No</th>
-              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">From → To</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">From</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">To</th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Date</th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Items</th>
               <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Approved By</th>
@@ -143,11 +144,10 @@ export default function StockTransfersPage({ embedded }) {
               <tr key={t.id} className={`border-t border-gray-50 hover:bg-blue-50/30 transition ${i % 2 !== 0 ? "bg-gray-50/30" : ""}`}>
                 <td className="px-4 py-3 text-xs font-mono text-blue-600 font-semibold text-left">{t.transfer_no}</td>
                 <td className="px-4 py-3 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{t.from_branch}</span>
-                    <ArrowRight size={12} className="text-gray-400 flex-shrink-0" />
-                    <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg">{t.to_branch}</span>
-                  </div>
+                  <span className="text-xs font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{t.from_branch}</span>
+                </td>
+                <td className="px-4 py-3 text-left">
+                  <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg">{t.to_branch}</span>
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-500 text-left">{t.transfer_date}</td>
                 <td className="px-4 py-3 text-sm text-slate-600 text-center">{t.items}</td>

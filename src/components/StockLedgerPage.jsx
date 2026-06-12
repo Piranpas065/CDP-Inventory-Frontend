@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   BarChart2, Search, ChevronLeft, ChevronRight,
   XCircle, ArrowUpCircle, ArrowDownCircle, RefreshCw,
-  Package, Building2, Calendar, Filter
+  Package, Building2, Calendar
 } from "lucide-react";
 import { SearchBar } from "./common/UIComponents";
 
@@ -57,9 +57,6 @@ export default function StockLedgerPage({ embedded }) {
           <h1 className="text-xl font-bold text-slate-800">Stock Ledger</h1>
           <p className="text-sm text-gray-400 mt-0.5">Complete stock movement history</p>
         </div>
-        <button className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm">
-          <Filter size={13} /> Export
-        </button>
       </div>
 
       {/* Stats */}

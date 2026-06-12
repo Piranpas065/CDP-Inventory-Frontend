@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import {
   Package, Plus, Search, Filter, MoreVertical,
   Edit, Trash2, Eye, ChevronLeft, ChevronRight,
@@ -7,6 +7,7 @@ import {
   Star, ChevronDown, ChevronUp, Barcode, Palette,
   Shirt, Hash
 } from "lucide-react";
+import { Button, Modal, FormField, TextArea, CheckboxField, Badge, ActionButtons, SearchBar, Pagination } from "./common/UIComponents";
 
 // ── Mock Data ──────────────────────────────────────────────
 const brands = ["Nike", "Adidas", "Samsung", "Apple", "Generic"];
@@ -102,41 +103,6 @@ const mockProducts = [
 ];
 
 // ── Helpers ────────────────────────────────────────────────
-const Badge = ({ active }) => (
-  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium
-    ${active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
-    {active ? <><CheckCircle size={10} /> Active</> : <><XCircle size={10} /> Inactive</>}
-  </span>
-);
-
-const Modal = ({ title, onClose, children, wide }) => (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div className={`bg-white rounded-2xl shadow-2xl w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`}>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-        <h2 className="text-base font-bold text-slate-800">{title}</h2>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition">
-          <XCircle size={18} />
-        </button>
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  </div>
-);
-
-const FormField = ({ label, icon: Icon, type = "text", required, ...props }) => (
-  <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-1">{label}{required && <span className="text-red-400 ml-0.5">*</span>}</label>
-    <div className="relative">
-      {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
-      <input
-        type={type}
-        className={`w-full ${Icon ? "pl-9" : "pl-3"} pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50`}
-        {...props}
-      />
-    </div>
-  </div>
-);
-
 const SelectField = ({ label, icon: Icon, options, required, ...props }) => (
   <div>
     <label className="block text-sm font-semibold text-slate-700 mb-1">{label}{required && <span className="text-red-400 ml-0.5">*</span>}</label>
@@ -153,16 +119,6 @@ const SelectField = ({ label, icon: Icon, options, required, ...props }) => (
   </div>
 );
 
-const TextArea = ({ label, required, ...props }) => (
-  <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-1">{label}{required && <span className="text-red-400 ml-0.5">*</span>}</label>
-    <textarea
-      rows={3}
-      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
-      {...props}
-    />
-  </div>
-);
 
 // ── Variant Row ────────────────────────────────────────────
 const VariantRow = ({ variant, onRemove, onChange }) => (
@@ -314,15 +270,13 @@ export default function ProductsPage({ embedded = false }) {
             { key: "is_default", label: "Default" },
             { key: "is_variant", label: "Has Variants" },
           ].map(({ key, label }) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={data[key]}
-                onChange={e => setData({ ...data, [key]: e.target.checked })}
-                className="w-4 h-4 accent-blue-600"
-              />
-              <span className="text-sm text-slate-600 font-medium">{label}</span>
-            </label>
+            <CheckboxField
+              key={key}
+              id={key}
+              label={label}
+              checked={data[key]}
+              onChange={e => setData({ ...data, [key]: e.target.checked })}
+            />
           ))}
         </div>
       </div>
@@ -334,12 +288,7 @@ export default function ProductsPage({ embedded = false }) {
             <p className="text-sm font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
               <Layers size={13} /> Product Variants
             </p>
-            <button
-              onClick={addVariantToForm}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-            >
-              <Plus size={12} /> Add Variant
-            </button>
+            <Button onClick={addVariantToForm} icon={Plus}>Add Variant</Button>
           </div>
           {data.variants.length === 0 && (
             <p className="text-sm text-slate-600 text-center py-4 bg-gray-50 rounded-xl">No variants added yet. Click "Add Variant".</p>
@@ -358,8 +307,8 @@ export default function ProductsPage({ embedded = false }) {
       )}
 
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-        <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-        <button onClick={onSave} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">{saveLabel}</button>
+        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" onClick={onSave}>{saveLabel}</Button>
       </div>
     </>
   );
@@ -369,12 +318,7 @@ export default function ProductsPage({ embedded = false }) {
     return (
       <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
         <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => { setShowAddPage(false); setForm(emptyProduct); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition"
-          >
-            <ChevronLeft size={16} /> Back to Products
-          </button>
+          <Button variant="secondary" onClick={() => { setShowAddPage(false); setForm(emptyProduct); }} icon={ChevronLeft}>Back to Products</Button>
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Add New Product</h1>
             <p className="text-sm text-slate-400 mt-0.5">Create a new product with variants</p>
@@ -396,18 +340,12 @@ export default function ProductsPage({ embedded = false }) {
   return (
     <div className={`${embedded ? "p-5 min-h-full" : "p-6 min-h-screen"} bg-gray-50`} style={{ fontFamily: "'Segoe UI', sans-serif" }}>
 
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Products</h1>
           <p className="text-sm text-slate-400 mt-0.5">Manage products and variants</p>
         </div>
-        <button
-          onClick={() => setShowAddPage(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200"
-        >
-          <Plus size={16} /> Add Product
-        </button>
+        <Button onClick={() => setShowAddPage(true)} icon={Plus}>Add Product</Button>
       </div>
 
       {/* Stat Cards */}
@@ -432,25 +370,19 @@ export default function ProductsPage({ embedded = false }) {
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
+        <div className="flex-1 min-w-[200px]">
+          <SearchBar
+            search={search}
+            setSearch={val => { setSearch(val); setCurrentPage(1); }}
             placeholder="Search by name, code, brand..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            filterOptions={[
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+            selectedFilter={filterStatus}
+            setSelectedFilter={val => { setFilterStatus(val); setCurrentPage(1); }}
           />
-        </div>
-
-        {/* Status filter */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-          {["all", "active", "inactive"].map(s => (
-            <button key={s} onClick={() => { setFilterStatus(s); setCurrentPage(1); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg capitalize transition
-                ${filterStatus === s ? "bg-blue-600 text-white text-sm" : "text-slate-700 hover:bg-gray-100 text-sm"}`}>
-              {s}
-            </button>
-          ))}
         </div>
 
         {/* Category filter */}
@@ -471,19 +403,23 @@ export default function ProductsPage({ embedded = false }) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-max">
           <thead>
-            <tr className="bg-gray-50 text-left">
+            <tr className="bg-gray-50 border-b border-gray-100">
               <th className="px-4 py-3 w-8"></th>
-              {["Product", "Code", "Category", "Brand", "Unit", "Variant", "Suppliers", "Status", "Actions"].map(h => (
-                <th key={h} className="px-4 py-3 text-sm font-semibold text-slate-700 uppercase tracking-wide whitespace-nowrap">
-                  <div className="flex items-center gap-1">{h} <ArrowUpDown size={10} className="text-gray-300" /></div>
-                </th>
-              ))}
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Product</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Code</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Category</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Brand</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Unit</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Variant</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Suppliers</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+              <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginated.map((p, i) => (
-              <>
-                <tr key={p.id} className={`border-t border-gray-50 hover:bg-blue-50/20 transition ${i % 2 === 0 ? "" : "bg-gray-50/30"}`}>
+              <Fragment key={p.id}>
+                <tr className={`border-t border-gray-50 hover:bg-blue-50/20 transition ${i % 2 === 0 ? "" : "bg-gray-50/30"}`}>
                   {/* Expand toggle */}
                   <td className="px-2 py-3 text-center">
                     {p.is_variant && p.variants.length > 0 && (
@@ -495,7 +431,7 @@ export default function ProductsPage({ embedded = false }) {
                       </button>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                         <Package size={14} className="text-blue-500" />
@@ -503,22 +439,20 @@ export default function ProductsPage({ embedded = false }) {
                       <span className="text-sm font-semibold text-slate-900 max-w-[160px] truncate">{p.product_name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm font-mono text-slate-900 font-semibold">{p.product_code}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-sm font-mono text-slate-900 font-semibold text-left">{p.product_code}</td>
+                  <td className="px-4 py-3 text-left">
                     <div className="text-sm text-slate-700">{p.main_category_id}</div>
                     <div className="text-sm text-slate-600">{p.sub_category_id}</div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">{p.brand_id}</td>
-                  <td className="px-4 py-3 text-sm text-slate-700">{p.unit_id}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-sm text-slate-700 text-left">{p.brand_id}</td>
+                  <td className="px-4 py-3 text-sm text-slate-700 text-left">{p.unit_id}</td>
+                  <td className="px-4 py-3 text-center">
                     {p.is_variant
-                      ? <span className="block w-full text-center text-sm font-semibold">
-                          {p.variants.length}
-                        </span>
+                      ? <span className="font-semibold">{p.variants.length}</span>
                       : <span className="text-sm text-slate-600">No variants</span>
                     }
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-left">
                     {p.is_variant && p.variants.length > 0
                       ? <div className="text-sm text-slate-700">
                           {Array.from(new Set(p.variants.map(v => v.supplier_id).filter(Boolean))).join(", ") || "—"}
@@ -526,21 +460,14 @@ export default function ProductsPage({ embedded = false }) {
                       : <span className="text-sm text-slate-600">—</span>
                     }
                   </td>
-                  <td className="px-4 py-3"><Badge active={p.is_active} /></td>
+                  <td className="px-4 py-3 text-center"><Badge active={p.is_active} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => { setSelectedProduct(p); setShowViewModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition" title="View">
-                        <Eye size={14} />
-                      </button>
-                      <button onClick={() => { setSelectedProduct({ ...p, variants: [...p.variants] }); setShowEditModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition" title="Edit">
-                        <Edit size={14} />
-                      </button>
-                      <button onClick={() => { setSelectedProduct(p); setShowDeleteModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition" title="Delete">
-                        <Trash2 size={14} />
-                      </button>
+                    <div className="flex justify-center">
+                      <ActionButtons
+                        onView={() => { setSelectedProduct(p); setShowViewModal(true); }}
+                        onEdit={() => { setSelectedProduct({ ...p, variants: [...p.variants] }); setShowEditModal(true); }}
+                        onDelete={() => { setSelectedProduct(p); setShowDeleteModal(true); }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -572,41 +499,18 @@ export default function ProductsPage({ embedded = false }) {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-          <p className="text-sm text-slate-600">
-            Showing {Math.min((currentPage - 1) * perPage + 1, filtered.length)}–{Math.min(currentPage * perPage, filtered.length)} of {filtered.length} results
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30 transition"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-              <button key={pg} onClick={() => setCurrentPage(pg)}
-                className={`w-7 h-7 rounded-lg text-sm font-semibold transition
-                  ${currentPage === pg ? "bg-blue-600 text-white" : "hover:bg-gray-100 text-slate-700"}`}>
-                {pg}
-              </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30 transition"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+          showingText={`Showing ${Math.min((currentPage - 1) * perPage + 1, filtered.length)}–${Math.min(currentPage * perPage, filtered.length)} of ${filtered.length} results`}
+        />
       </div>
 
 
@@ -690,7 +594,7 @@ export default function ProductsPage({ embedded = false }) {
             )}
           </div>
           <div className="flex justify-end mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowViewModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Close</button>
+            <Button variant="secondary" onClick={() => setShowViewModal(false)}>Close</Button>
           </div>
         </Modal>
       )}
@@ -706,8 +610,8 @@ export default function ProductsPage({ embedded = false }) {
             <p className="text-sm text-gray-400">This will also delete all {selectedProduct.variants.length} variant(s). This action cannot be undone.</p>
           </div>
           <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowDeleteModal(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleDelete} className="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition">Yes, Delete</button>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete}>Yes, Delete</Button>
           </div>
         </Modal>
       )}

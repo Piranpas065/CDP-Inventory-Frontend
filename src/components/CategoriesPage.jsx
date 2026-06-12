@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import {
   Tag, Plus, Search, Edit, Trash2, Eye,
   ChevronLeft, ChevronRight, ArrowUpDown,
@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp, Hash, AlignLeft,
   Bookmark, ToggleLeft, Users
 } from "lucide-react";
+import { Button, Modal, FormField, TextArea, CheckboxField, Badge, SearchBar, ActionButtons, Pagination } from "./common/UIComponents";
 
 // ── Mock Data ──────────────────────────────────────────────
 const mockCategories = [
@@ -66,67 +67,11 @@ const mockCategories = [
 ];
 
 // ── Helpers ────────────────────────────────────────────────
-const Badge = ({ active }) => (
-  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium
-    ${active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
-    {active ? <><CheckCircle size={10} /> Active</> : <><XCircle size={10} /> Inactive</>}
-  </span>
-);
-
 const FlagBadge = ({ show, label, color }) => show ? (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-medium ${color}`}>
     {label}
   </span>
 ) : null;
-
-const Modal = ({ title, onClose, children, wide }) => (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div className={`bg-white rounded-2xl shadow-2xl w-full ${wide ? "max-w-2xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`}>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-        <h2 className="text-base font-bold text-slate-800">{title}</h2>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition">
-          <XCircle size={18} />
-        </button>
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  </div>
-);
-
-const FormField = ({ label, icon: Icon, required, ...props }) => (
-  <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-1">
-      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-    </label>
-    <div className="relative">
-      {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
-      <input
-        className={`w-full ${Icon ? "pl-9" : "pl-3"} pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50`}
-        {...props}
-      />
-    </div>
-  </div>
-);
-
-const TextArea = ({ label, required, ...props }) => (
-  <div>
-    <label className="block text-sm font-semibold text-slate-700 mb-1">
-      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
-    </label>
-    <textarea
-      rows={3}
-      className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
-      {...props}
-    />
-  </div>
-);
-
-const CheckboxField = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-2 cursor-pointer">
-    <input type="checkbox" checked={checked} onChange={onChange} className="w-4 h-4 accent-blue-600" />
-    <span className="text-sm text-slate-600 font-medium">{label}</span>
-  </label>
-);
 
 const categoryColors = [
   "bg-blue-100 text-blue-600",
@@ -270,25 +215,14 @@ export default function CategoriesPage({ embedded = false }) {
   return (
     <div className={`${embedded ? "p-5 min-h-full" : "p-6 min-h-screen"} bg-gray-50`} style={{ fontFamily: "'Segoe UI', sans-serif" }}>
 
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-slate-800">Categories</h1>
           <p className="text-sm text-slate-600 mt-0.5">Manage main categories and sub categories</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowAddSub(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-slate-700 text-sm font-semibold rounded-xl hover:bg-gray-50 transition shadow-sm"
-          >
-            <Plus size={15} /> Add Sub Category
-          </button>
-          <button
-            onClick={() => setShowAddMain(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200"
-          >
-            <Plus size={15} /> Add Main Category
-          </button>
+          <Button variant="secondary" onClick={() => setShowAddSub(true)} icon={Plus}>Add Sub Category</Button>
+          <Button variant="primary" onClick={() => setShowAddMain(true)} icon={Plus}>Add Main Category</Button>
         </div>
       </div>
 
@@ -328,26 +262,19 @@ export default function CategoriesPage({ embedded = false }) {
           </button>
         </div>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
+        <div className="flex-1 min-w-[200px]">
+          <SearchBar
+            search={search}
+            setSearch={val => { setSearch(val); setCurrentPage(1); }}
             placeholder="Search by name or slug..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            filterOptions={[
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+            selectedFilter={filterStatus}
+            setSelectedFilter={val => { setFilterStatus(val); setCurrentPage(1); }}
           />
-        </div>
-
-        {/* Status filter */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-          {["all", "active", "inactive"].map(s => (
-            <button key={s} onClick={() => { setFilterStatus(s); setCurrentPage(1); }}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg capitalize transition
-                ${filterStatus === s ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-gray-100"}`}>
-              {s}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -358,19 +285,20 @@ export default function CategoriesPage({ embedded = false }) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="px-4 py-3 w-8"></th>
-                {["Category", "Slug", "Sub Count", "Created By", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-4 py-3 text-sm font-semibold text-slate-700 uppercase tracking-wide whitespace-nowrap">
-                    <div className="flex items-center gap-1">{h} <ArrowUpDown size={10} className="text-gray-300" /></div>
-                  </th>
-                ))}
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Category</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Slug</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Sub Count</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Created By</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((cat, i) => (
-                <>
-                  <tr key={cat.id} className={`border-t border-gray-50 hover:bg-blue-50/20 transition ${i % 2 === 0 ? "" : "bg-gray-50/30"}`}>
+                <Fragment key={cat.id}>
+                  <tr className={`border-t border-gray-50 hover:bg-blue-50/20 transition ${i % 2 === 0 ? "" : "bg-gray-50/30"}`}>
                     <td className="px-2 py-3 text-center">
                       {cat.sub_categories.length > 0 && (
                         <button onClick={() => toggleExpand(cat.id)}
@@ -379,7 +307,7 @@ export default function CategoriesPage({ embedded = false }) {
                         </button>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-left">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${categoryColors[i % categoryColors.length]}`}>
                           <Tag size={14} />
@@ -387,13 +315,11 @@ export default function CategoriesPage({ embedded = false }) {
                         <span className="text-sm font-semibold text-slate-900">{cat.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm font-mono text-slate-700">{cat.slug}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col items-center justify-center leading-none">
-                        <span className="text-lg font-bold text-slate-500">{cat.sub_categories.length}</span>
-                      </div>
+                    <td className="px-4 py-3 text-sm font-mono text-slate-700 text-center">{cat.slug}</td>
+                    <td className="px-4 py-3 text-center text-sm font-bold text-slate-500">
+                      {cat.sub_categories.length}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-left">
                       <div className="flex items-center gap-1.5">
                         <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                           {cat.created_by[0]}
@@ -401,15 +327,14 @@ export default function CategoriesPage({ embedded = false }) {
                         <span className="text-sm text-slate-700">{cat.created_by}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3"><Badge active={cat.is_active} /></td>
+                    <td className="px-4 py-3 text-center"><Badge active={cat.is_active} /></td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => { setSelected(cat); setShowView(true); }}
-                          className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition"><Eye size={14} /></button>
-                        <button onClick={() => { setSelected({ ...cat }); setShowEditMain(true); }}
-                          className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition"><Edit size={14} /></button>
-                        <button onClick={() => { setSelected(cat); setShowDeleteMain(true); }}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition"><Trash2 size={14} /></button>
+                      <div className="flex justify-center">
+                        <ActionButtons
+                          onView={() => { setSelected(cat); setShowView(true); }}
+                          onEdit={() => { setSelected({ ...cat }); setShowEditMain(true); }}
+                          onDelete={() => { setSelected(cat); setShowDeleteMain(true); }}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -431,13 +356,12 @@ export default function CategoriesPage({ embedded = false }) {
                                 <FlagBadge show={sub.is_featured} label="⭐ Featured" color="bg-amber-100 text-amber-600" />
                                 <FlagBadge show={sub.is_default} label="✓ Default" color="bg-blue-100 text-blue-600" />
                               </div>
-                              <div className="flex items-center justify-end gap-1 mt-2">
-                                <button onClick={() => { setSelectedSub({ ...sub, main_category_id: cat.id }); setShowViewSub(true); }}
-                                  className="p-1 rounded-lg hover:bg-blue-50 text-blue-400 transition"><Eye size={12} /></button>
-                                <button onClick={() => { setSelectedSub({ ...sub, main_category_id: cat.id }); setShowEditSub(true); }}
-                                  className="p-1 rounded-lg hover:bg-amber-50 text-amber-400 transition"><Edit size={12} /></button>
-                                <button onClick={() => { setSelectedSub(sub); setShowDeleteSub(true); }}
-                                  className="p-1 rounded-lg hover:bg-red-50 text-red-400 transition"><Trash2 size={12} /></button>
+                              <div className="mt-2 flex justify-start">
+                                <ActionButtons
+                                  onView={() => { setSelectedSub({ ...sub, main_category_id: cat.id }); setShowViewSub(true); }}
+                                  onEdit={() => { setSelectedSub({ ...sub, main_category_id: cat.id }); setShowEditSub(true); }}
+                                  onDelete={() => { setSelectedSub(sub); setShowDeleteSub(true); }}
+                                />
                               </div>
                             </div>
                           ))}
@@ -445,22 +369,17 @@ export default function CategoriesPage({ embedded = false }) {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-            <p className="text-sm text-slate-600">Showing {Math.min((currentPage-1)*perPage+1, filteredMain.length)}–{Math.min(currentPage*perPage, filteredMain.length)} of {filteredMain.length}</p>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setCurrentPage(p => Math.max(1,p-1))} disabled={currentPage===1} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30 transition"><ChevronLeft size={15}/></button>
-              {Array.from({length:totalPages},(_,i)=>i+1).map(pg=>(
-                <button key={pg} onClick={()=>setCurrentPage(pg)} className={`w-7 h-7 rounded-lg text-sm font-semibold transition ${currentPage===pg?"bg-blue-600 text-white":"hover:bg-gray-100 text-slate-700"}`}>{pg}</button>
-              ))}
-              <button onClick={() => setCurrentPage(p => Math.min(totalPages,p+1))} disabled={currentPage===totalPages} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30 transition"><ChevronRight size={15}/></button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+            showingText={`Showing ${Math.min((currentPage-1)*perPage+1, filteredMain.length)}–${Math.min(currentPage*perPage, filteredMain.length)} of ${filteredMain.length}`}
+          />
         </div>
       )}
 
@@ -469,18 +388,19 @@ export default function CategoriesPage({ embedded = false }) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
-                {["Sub Category", "Main Category", "Slug", "Created By", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-4 py-3 text-sm font-semibold text-slate-700 uppercase tracking-wide whitespace-nowrap">
-                    <div className="flex items-center gap-1">{h} <ArrowUpDown size={10} className="text-gray-300" /></div>
-                  </th>
-                ))}
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Sub Category</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Main Category</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Slug</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Created By</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((sub, i) => (
                 <tr key={sub.id} className={`border-t border-gray-50 hover:bg-blue-50/20 transition ${i%2===0?"":"bg-gray-50/30"}`}>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${categoryColors[i % categoryColors.length]}`}>
                         <Layers size={13} />
@@ -488,24 +408,26 @@ export default function CategoriesPage({ embedded = false }) {
                       <span className="text-sm font-semibold text-slate-900">{sub.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-center">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-50 text-blue-700">
                       <Tag size={10} /> {sub.main_category_name}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm font-mono text-slate-700">{sub.slug}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-sm font-mono text-slate-700 text-center">{sub.slug}</td>
+                  <td className="px-4 py-3 text-left">
                     <div className="flex items-center gap-1.5">
                       <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">{sub.created_by[0]}</div>
                       <span className="text-sm text-slate-700">{sub.created_by}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3"><Badge active={sub.is_active} /></td>
+                  <td className="px-4 py-3 text-center"><Badge active={sub.is_active} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => { setSelectedSub(sub); setShowViewSub(true); }} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition"><Eye size={14}/></button>
-                      <button onClick={() => { setSelectedSub({...sub}); setShowEditSub(true); }} className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition"><Edit size={14}/></button>
-                      <button onClick={() => { setSelectedSub(sub); setShowDeleteSub(true); }} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition"><Trash2 size={14}/></button>
+                    <div className="flex justify-center">
+                      <ActionButtons
+                        onView={() => { setSelectedSub(sub); setShowViewSub(true); }}
+                        onEdit={() => { setSelectedSub({...sub}); setShowEditSub(true); }}
+                        onDelete={() => { setSelectedSub(sub); setShowDeleteSub(true); }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -513,16 +435,12 @@ export default function CategoriesPage({ embedded = false }) {
             </tbody>
           </table>
 
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-            <p className="text-sm text-slate-600">Showing {Math.min((currentPage-1)*perPage+1,filteredSub.length)}–{Math.min(currentPage*perPage,filteredSub.length)} of {filteredSub.length}</p>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setCurrentPage(p=>Math.max(1,p-1))} disabled={currentPage===1} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30"><ChevronLeft size={15}/></button>
-              {Array.from({length:totalPages},(_,i)=>i+1).map(pg=>(
-                <button key={pg} onClick={()=>setCurrentPage(pg)} className={`w-7 h-7 rounded-lg text-sm font-semibold transition ${currentPage===pg?"bg-blue-600 text-white":"hover:bg-gray-100 text-slate-700"}`}>{pg}</button>
-              ))}
-              <button onClick={() => setCurrentPage(p=>Math.min(totalPages,p+1))} disabled={currentPage===totalPages} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 disabled:opacity-30"><ChevronRight size={15}/></button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+            showingText={`Showing ${Math.min((currentPage-1)*perPage+1,filteredSub.length)}–${Math.min(currentPage*perPage,filteredSub.length)} of ${filteredSub.length}`}
+          />
         </div>
       )}
 
@@ -542,8 +460,8 @@ export default function CategoriesPage({ embedded = false }) {
             <CheckboxField label="Default" checked={formMain.is_default} onChange={e => setFormMain({...formMain, is_default: e.target.checked})} />
           </div>
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowAddMain(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleAddMain} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">Add Category</button>
+            <Button variant="secondary" onClick={() => setShowAddMain(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleAddMain}>Add Category</Button>
           </div>
         </Modal>
       )}
@@ -598,7 +516,7 @@ export default function CategoriesPage({ embedded = false }) {
             </div>
           </div>
           <div className="flex justify-end mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowView(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Close</button>
+            <Button variant="secondary" onClick={() => setShowView(false)}>Close</Button>
           </div>
         </Modal>
       )}
@@ -633,7 +551,7 @@ export default function CategoriesPage({ embedded = false }) {
             </div>
           </div>
           <div className="flex justify-end mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowViewSub(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Close</button>
+            <Button variant="secondary" onClick={() => setShowViewSub(false)}>Close</Button>
           </div>
         </Modal>
       )}
@@ -652,8 +570,8 @@ export default function CategoriesPage({ embedded = false }) {
             <CheckboxField label="Active" checked={selected.is_active} onChange={e => setSelected({...selected, is_active: e.target.checked})} />
           </div>
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowEditMain(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleEditMain} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">Save Changes</button>
+            <Button variant="secondary" onClick={() => setShowEditMain(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleEditMain}>Save Changes</Button>
           </div>
         </Modal>
       )}
@@ -676,8 +594,8 @@ export default function CategoriesPage({ embedded = false }) {
             <p className="text-sm text-gray-400">This will also delete all {selected.sub_categories.length} sub category(s). This cannot be undone.</p>
           </div>
           <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowDeleteMain(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleDeleteMain} className="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition">Yes, Delete</button>
+            <Button variant="secondary" onClick={() => setShowDeleteMain(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDeleteMain}>Yes, Delete</Button>
           </div>
         </Modal>
       )}
@@ -693,8 +611,8 @@ export default function CategoriesPage({ embedded = false }) {
             <p className="text-sm text-gray-400">This sub category will be permanently deleted.</p>
           </div>
           <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowDeleteSub(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleDeleteSub} className="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition">Yes, Delete</button>
+            <Button variant="secondary" onClick={() => setShowDeleteSub(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDeleteSub}>Yes, Delete</Button>
           </div>
         </Modal>
       )}

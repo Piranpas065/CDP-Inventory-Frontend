@@ -5,6 +5,8 @@ import {
   XCircle, Edit, Trash2, Eye, ChevronLeft, ChevronRight,
   ArrowUpDown, Shield
 } from "lucide-react";
+import { Button, Modal, FormField, CheckboxField, Badge, ActionButtons, SearchBar, Pagination } from "./common/UIComponents";
+
 
 const mockBranches = [
   {
@@ -163,33 +165,6 @@ const BranchCard = ({ branch, onView, onEdit, onDelete }) => {
   );
 };
 
-// ── Modal ──────────────────────────────────────────────────
-const Modal = ({ title, onClose, children }) => (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 className="text-base font-bold text-slate-800">{title}</h2>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition">
-          <XCircle size={18} />
-        </button>
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  </div>
-);
-
-const FormField = ({ label, icon: Icon, ...props }) => (
-  <div>
-    <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
-    <div className="relative">
-      {Icon && <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />}
-      <input
-        className={`w-full ${Icon ? "pl-9" : "pl-3"} pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50`}
-        {...props}
-      />
-    </div>
-  </div>
-);
 
 // ── Main Page ──────────────────────────────────────────────
 export default function BranchesPage({ embedded = false }) {
@@ -251,12 +226,7 @@ export default function BranchesPage({ embedded = false }) {
           <h1 className="text-xl px-3 font-bold text-slate-800">Branches</h1>
           <p className="text-sm px-3 text-slate-400 mt-0.5">Manage all your business branches</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200"
-        >
-          <Plus size={16} /> Add Branch
-        </button>
+        <Button onClick={() => setShowAddModal(true)} icon={Plus}>Add Branch</Button>
       </div>
 
       {/* Stat cards */}
@@ -281,29 +251,19 @@ export default function BranchesPage({ embedded = false }) {
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
+        <div className="flex-1 min-w-[200px]">
+          <SearchBar
+            search={search}
+            setSearch={setSearch}
             placeholder="Search by name, code, email..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+            filterOptions={[
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+            selectedFilter={filterStatus}
+            setSelectedFilter={setFilterStatus}
           />
-        </div>
-
-        {/* Status filter */}
-        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-          {["all", "active", "inactive"].map(s => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg capitalize transition
-                ${filterStatus === s ? "bg-blue-600 text-white text-sm" : "text-slate-700 hover:bg-gray-100 text-sm"}`}
-            >
-              {s}
-            </button>
-          ))}
         </div>
 
         {/* View toggle */}
@@ -348,18 +308,20 @@ export default function BranchesPage({ embedded = false }) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
-                {["Branch Name", "Branch Code", "Contact", "Email", "Status", "Type", "Actions"].map(h => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                    <div className="flex items-center gap-1">{h} <ArrowUpDown size={10} className="text-gray-300" /></div>
-                  </th>
-                ))}
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Branch Name</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Branch Code</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Contact</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Email</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Type</th>
+                <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((b, i) => (
                 <tr key={b.id} className={`border-t border-gray-50 hover:bg-blue-50/30 transition ${i % 2 === 0 ? "" : "bg-gray-50/30"}`}>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-left">
                     <div className="flex items-center gap-2">
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${b.is_main_branch ? "bg-blue-600" : "bg-slate-100"}`}>
                         <Building2 size={13} className={b.is_main_branch ? "text-white" : "text-slate-500"} />
@@ -367,34 +329,27 @@ export default function BranchesPage({ embedded = false }) {
                       <span className="text-xs font-semibold text-slate-700">{b.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs font-mono text-slate-900 font-semibold">{b.branch_code}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{b.contact_number}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{b.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-xs font-mono text-slate-900 font-semibold text-left">{b.branch_code}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 text-left">{b.contact_number}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 text-left">{b.email}</td>
+                  <td className="px-4 py-3 text-center">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
                       ${b.is_active ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                       {b.is_active ? <><CheckCircle size={10} /> Active</> : <><XCircle size={10} /> Inactive</>}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-center">
                     {b.is_main_branch
                       ? <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600"><Star size={10} fill="currentColor" /> Main</span>
                       : <span className="text-xs text-gray-400">Sub</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => { setSelectedBranch(b); setShowViewModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-500 transition" title="View">
-                        <Eye size={14} />
-                      </button>
-                      <button onClick={() => { setSelectedBranch({ ...b }); setShowEditModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-amber-50 text-amber-500 transition" title="Edit">
-                        <Edit size={14} />
-                      </button>
-                      <button onClick={() => { setSelectedBranch(b); setShowDeleteModal(true); }}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition" title="Delete">
-                        <Trash2 size={14} />
-                      </button>
+                    <div className="flex justify-center">
+                      <ActionButtons
+                        onView={() => { setSelectedBranch(b); setShowViewModal(true); }}
+                        onEdit={() => { setSelectedBranch({ ...b }); setShowEditModal(true); }}
+                        onDelete={() => { setSelectedBranch(b); setShowDeleteModal(true); }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -402,15 +357,12 @@ export default function BranchesPage({ embedded = false }) {
             </tbody>
           </table>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100">
-            <p className="text-xs text-gray-400">Showing {filtered.length} results</p>
-            <div className="flex items-center gap-1">
-              <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"><ChevronLeft size={15} /></button>
-              <button className="w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-semibold">1</button>
-              <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"><ChevronRight size={15} /></button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={1}
+            totalPages={1}
+            setCurrentPage={() => {}}
+            showingText={`Showing ${filtered.length} of ${branches.length} branches`}
+          />
         </div>
       )}
 
@@ -440,8 +392,8 @@ export default function BranchesPage({ embedded = false }) {
             </div>
           </div>
           <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowAddModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleAdd} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">Add Branch</button>
+            <Button variant="secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleAdd}>Add Branch</Button>
           </div>
         </Modal>
       )}
@@ -485,7 +437,7 @@ export default function BranchesPage({ embedded = false }) {
             </div>
           </div>
           <div className="flex justify-end mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowViewModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Close</button>
+            <Button variant="secondary" onClick={() => setShowViewModal(false)}>Close</Button>
           </div>
         </Modal>
       )}
@@ -516,8 +468,8 @@ export default function BranchesPage({ embedded = false }) {
             </div>
           </div>
           <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowEditModal(false)} className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleEdit} className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition">Save Changes</button>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleEdit}>Save Changes</Button>
           </div>
         </Modal>
       )}
@@ -533,8 +485,8 @@ export default function BranchesPage({ embedded = false }) {
             <p className="text-sm text-gray-400">This action cannot be undone. All data related to this branch will be permanently deleted.</p>
           </div>
           <div className="flex items-center justify-center gap-3 mt-5 pt-4 border-t border-gray-100">
-            <button onClick={() => setShowDeleteModal(false)} className="px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">Cancel</button>
-            <button onClick={handleDelete} className="px-5 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition">Yes, Delete</button>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleDelete}>Yes, Delete</Button>
           </div>
         </Modal>
       )}

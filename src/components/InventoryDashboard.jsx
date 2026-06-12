@@ -15,6 +15,16 @@ import {
 import BranchesPage from "./BranchesPage";
 import ProductsPage from "./ProductsPage";
 import CategoriesPage from "./CategoriesPage";
+import BrandsPage from "./BrandsPage";
+import SuppliersPage from "./SuppliersPage";
+import UnitsPage from "./UnitsPage";
+import PurchaseOrdersPage from "./PurchaseOrdersPage";
+import GRNPage from "./GrnsPage";
+import PurchaseReturnsPage from "./PurchaseReturnsPage";
+import PaymentsPage from "./PaymentsPage";
+import StockLedgerPage from "./StockLedgerPage";
+import StockTransfersPage from "./StockTranfersPage";
+
 
 // ── Mock Data ──────────────────────────────────────────────
 
@@ -111,12 +121,8 @@ const navGroups = [
   },
 ];
 
-const visibleNavGroups = navGroups
-  .map((group) => ({
-    ...group,
-    items: group.items.filter((item) => ["dashboard", "branches", "products", "categories"].includes(item.id)),
-  }))
-  .filter((group) => group.items.length > 0);
+const visibleNavGroups = navGroups;
+
 
 const statCards = [
   { label: "Total Products", value: "1,284", change: "+12", up: true, icon: Package, iconBg: "bg-blue-100", iconColor: "text-blue-600", sub: "across all branches" },
@@ -282,6 +288,24 @@ export default function InventoryDashboard({ activePage = "dashboard", onNavigat
             <ProductsPage embedded />
           ) : activePage === "categories" ? (
             <CategoriesPage embedded />
+          ) : activePage === "brands" ? (
+            <BrandsPage embedded />
+          ) : activePage === "suppliers" ? (
+            <SuppliersPage embedded />
+          ) : activePage === "units" ? (
+            <UnitsPage embedded />
+          ) : activePage === "po" ? (
+            <PurchaseOrdersPage embedded />
+          ) : activePage === "grn" ? (
+            <GRNPage embedded />
+          ) : activePage === "prn" ? (
+            <PurchaseReturnsPage embedded />
+          ) : activePage === "payments" ? (
+            <PaymentsPage embedded />
+          ) : activePage === "stock_ledger" ? (
+            <StockLedgerPage embedded />
+          ) : activePage === "stock_transfers" ? (
+            <StockTransfersPage embedded />
           ) : (
             <div className="p-5">
 

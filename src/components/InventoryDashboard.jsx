@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Package, Tag, Users, CreditCard,
   ShoppingCart, Truck, BarChart2, Settings, HelpCircle,
-  LogOut, Bell, Search, AlertTriangle, XCircle,
+  LogOut, Bell, Search, AlertTriangle, XCircle, FileText,
   ChevronRight, Store, ArrowUpRight, ArrowDownRight,
   MoreHorizontal, RefreshCw, Filter, GitMerge,
   ClipboardList, RotateCcw, Layers, TrendingDown,
@@ -24,6 +24,14 @@ import PurchaseReturnsPage from "./PurchaseReturnsPage";
 import PaymentsPage from "./PaymentsPage";
 import StockLedgerPage from "./StockLedgerPage";
 import StockTransfersPage from "./StockTranfersPage";
+import StockTakesPage from "./StockTakesPage";
+import ReorderLevelsPage from "./ReorderLevelsPage";
+import ExpiryRecordsPage from "./ExpiryRecordsPage";
+import DamagedRecordsPage from "./DamagedRecordsPage";
+import CheckInPage from "./CheckInPage";
+import CheckOutPage from "./CheckOutPage";
+import BranchRequestsPage from "./BranchRequestsPage";
+
 
 
 // ── Mock Data ──────────────────────────────────────────────
@@ -104,6 +112,9 @@ const navGroups = [
   {
     label: "STOCK",
     items: [
+      { icon: ArrowDownRight, label: "Check In", id: "check_in" },
+      { icon: ArrowUpRight, label: "Check Out", id: "check_out" },
+      { icon: FileText, label: "Branch Requests", id: "branch_requests" },
       { icon: BarChart2, label: "Stock Ledger", id: "stock_ledger" },
       { icon: GitMerge, label: "Stock Transfers", id: "stock_transfers" },
       { icon: ClipboardList, label: "Stock Takes", id: "stock_takes" },
@@ -302,10 +313,24 @@ export default function InventoryDashboard({ activePage = "dashboard", onNavigat
             <PurchaseReturnsPage embedded />
           ) : activePage === "payments" ? (
             <PaymentsPage embedded />
+          ) : activePage === "check_in" ? (
+            <CheckInPage embedded />
+          ) : activePage === "check_out" ? (
+            <CheckOutPage embedded />
+          ) : activePage === "branch_requests" ? (
+            <BranchRequestsPage embedded />
           ) : activePage === "stock_ledger" ? (
             <StockLedgerPage embedded />
           ) : activePage === "stock_transfers" ? (
             <StockTransfersPage embedded />
+          ) : activePage === "stock_takes" ? (
+            <StockTakesPage embedded />
+          ) : activePage === "reorder" ? (
+            <ReorderLevelsPage embedded />
+          ) : activePage === "expiry" ? (
+            <ExpiryRecordsPage embedded />
+          ) : activePage === "damage" ? (
+            <DamagedRecordsPage embedded />
           ) : (
             <div className="p-5">
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Boxes, Plus, Edit, Trash2, Filter, CheckCircle, XCircle } from "lucide-react";
-import { Button, Modal, FormField, TextArea, CheckboxField, Badge, SearchBar, Pagination } from "./common/UIComponents";
+import { Boxes, Plus, Edit, Trash2, Filter, CheckCircle, XCircle, LayoutGrid, Table } from "lucide-react";
+import { Button, Modal, FormField, TextArea, CheckboxField, Badge, ActionButtons, SearchBar, Pagination } from "./common/UIComponents";
 
 const mockUnits = [
   { id: 1, unit_code: "UNT-001", name: "Pieces", abbreviation: "Pcs", description: "Individual items", is_active: true },
@@ -17,6 +17,7 @@ export default function UnitsPage({ embedded }) {
   const [units, setUnits] = useState(mockUnits);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [viewMode, setViewMode] = useState("grid");
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ name: "", abbreviation: "", description: "", is_active: true });
@@ -71,48 +72,119 @@ export default function UnitsPage({ embedded }) {
       </div>
 
       {/* Search and Filter Toolbar */}
-      <div className="mb-4">
-        <SearchBar
-          search={search}
-          setSearch={val => { setSearch(val); setPage(1); }}
-          placeholder="Search units..."
-          filterOptions={[
-            { label: "All", value: "all" },
-            { label: "Active", value: "active" },
-            { label: "Inactive", value: "inactive" },
-          ]}
-          selectedFilter={filterStatus}
-          setSelectedFilter={val => { setFilterStatus(val); setPage(1); }}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex-1 min-w-[300px]">
+          <SearchBar
+            search={search}
+            setSearch={val => { setSearch(val); setPage(1); }}
+            placeholder="Search units..."
+            filterOptions={[
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ]}
+            selectedFilter={filterStatus}
+            setSelectedFilter={val => { setFilterStatus(val); setPage(1); }}
+          />
+        </div>
+
+        {/* View Mode Toggle */}
+        <div className="flex items-center bg-slate-100 border border-slate-200 rounded-full p-1 shadow-sm flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200 focus:outline-none ${
+              viewMode === "grid"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/40"
+            }`}
+          >
+            <LayoutGrid size={15} />
+            Grid
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("table")}
+            className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200 focus:outline-none ${
+              viewMode === "table"
+                ? "bg-blue-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-white/40"
+            }`}
+          >
+            <Table size={15} />
+            Table
+          </button>
+        </div>
       </div>
 
       <p className="text-sm text-slate-600 mb-4">Showing {filtered.length} units</p>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paged.map(u => (
-            <div key={u.id} className=" bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:border-blue-200 hover:shadow-sm transition-all group">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">{u.abbreviation}</span>
+        {viewMode === "grid" ? (
+          <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paged.map(u => (
+              <div key={u.id} className=" bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:border-blue-200 hover:shadow-sm transition-all group">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 font-bold text-sm">{u.abbreviation}</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{u.name}</p>
+                      <p className="text-xs text-gray-400 font-mono">{u.unit_code}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">{u.name}</p>
-                    <p className="text-xs text-gray-400 font-mono">{u.unit_code}</p>
-                  </div>
+                  <Badge active={u.is_active} />
                 </div>
-                <Badge active={u.is_active} />
+                <p className="text-xs text-gray-500 mb-3">{u.description || "No description"}</p>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="amberOutline" onClick={() => openEdit(u)} icon={Edit} className="flex-1 !py-1.5 text-xs">Edit</Button>
+                  <Button variant="dangerOutline" onClick={() => handleDelete(u.id)} icon={Trash2} className="flex-1 !py-1.5 text-xs">Delete</Button>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mb-3">{u.description || "No description"}</p>
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button variant="amberOutline" onClick={() => openEdit(u)} icon={Edit} className="flex-1 !py-1.5 text-xs">Edit</Button>
-                <Button variant="dangerOutline" onClick={() => handleDelete(u.id)} icon={Trash2} className="flex-1 !py-1.5 text-xs">Delete</Button>
-              </div>
-            </div>
-          ))}
-          {paged.length === 0 && <div className="col-span-3 py-10 text-center text-sm text-gray-400">No units found.</div>}
-        </div>
+            ))}
+            {paged.length === 0 && <div className="col-span-3 py-10 text-center text-sm text-gray-400">No units found.</div>}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-max">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Code</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Unit Name</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Abbreviation</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-left">Description</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map((u, i) => (
+                  <tr key={u.id} className={`border-t border-gray-50 hover:bg-blue-50/30 transition ${i % 2 !== 0 ? "bg-gray-50/30" : ""}`}>
+                    <td className="px-5 py-3 text-xs font-mono text-blue-600 font-semibold text-left">{u.unit_code}</td>
+                    <td className="px-5 py-3 text-sm font-semibold text-slate-800 text-left">{u.name}</td>
+                    <td className="px-5 py-3 text-sm text-slate-600 text-left">
+                      <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold border border-blue-100">{u.abbreviation}</span>
+                    </td>
+                    <td className="px-5 py-3 text-xs text-gray-500 text-left max-w-[250px] truncate" title={u.description}>{u.description || "—"}</td>
+                    <td className="px-5 py-3 text-center"><Badge active={u.is_active} /></td>
+                    <td className="px-5 py-3">
+                      <div className="flex justify-center">
+                        <ActionButtons
+                          onEdit={() => openEdit(u)}
+                          onDelete={() => handleDelete(u.id)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {paged.length === 0 && (
+                  <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No units found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <Pagination
           currentPage={page}

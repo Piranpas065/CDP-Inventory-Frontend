@@ -1,18 +1,18 @@
 import { useState } from "react";
 import {
   Plus, Eye, Edit, Trash2, CheckCircle, Clock,
-  FileText, Truck, XCircle
+  FileText, Truck, XCircle, ChevronRight
 } from "lucide-react";
 import { Button, Modal, FormField, TextArea, ActionButtons, SearchBar, Pagination } from "./common/UIComponents";
 
 const mockPOs = [
-  { id: 1, po_number: "PO-2026-001", supplier: "ABC Traders", branch: "Main Branch", order_date: "2026-06-01", expected_date: "2026-06-10", total_amount: "Rs. 45,000", status: "approved", items: 12, notes: "Urgent order" },
-  { id: 2, po_number: "PO-2026-002", supplier: "XYZ Supplies", branch: "Branch 02", order_date: "2026-06-02", expected_date: "2026-06-12", total_amount: "Rs. 28,500", status: "pending", items: 8, notes: "" },
-  { id: 3, po_number: "PO-2026-003", supplier: "Global Imports", branch: "Branch 03", order_date: "2026-06-03", expected_date: "2026-06-13", total_amount: "Rs. 72,000", status: "received", items: 20, notes: "Electronics batch" },
-  { id: 4, po_number: "PO-2026-004", supplier: "Local Mart", branch: "Main Branch", order_date: "2026-06-04", expected_date: "2026-06-14", total_amount: "Rs. 15,000", status: "draft", items: 5, notes: "" },
-  { id: 5, po_number: "PO-2026-005", supplier: "Premium Distributors", branch: "Kandy Branch", order_date: "2026-06-05", expected_date: "2026-06-15", total_amount: "Rs. 91,000", status: "approved", items: 30, notes: "Monthly restock" },
-  { id: 6, po_number: "PO-2026-006", supplier: "Tech Wholesale", branch: "Galle Branch", order_date: "2026-06-06", expected_date: "2026-06-16", total_amount: "Rs. 33,000", status: "cancelled", items: 11, notes: "Cancelled by supplier" },
-  { id: 7, po_number: "PO-2026-007", supplier: "ABC Traders", branch: "Branch 02", order_date: "2026-06-07", expected_date: "2026-06-17", total_amount: "Rs. 56,500", status: "pending", items: 17, notes: "" },
+  { id: 1, po_number: "PO-2026-001", supplier: "ABC Traders", branch: "Main Branch", order_date: "2026-06-01", expected_date: "2026-06-10", total_amount: "Rs. 45,000", status: "approved", items: 12, notes: "Urgent order", ordered_products: ["Wireless Bluetooth Headphones"] },
+  { id: 2, po_number: "PO-2026-002", supplier: "XYZ Supplies", branch: "Branch 02", order_date: "2026-06-02", expected_date: "2026-06-12", total_amount: "Rs. 28,500", status: "pending", items: 8, notes: "", ordered_products: ["Wireless Bluetooth Headphones"] },
+  { id: 3, po_number: "PO-2026-003", supplier: "Global Imports", branch: "Branch 03", order_date: "2026-06-03", expected_date: "2026-06-13", total_amount: "Rs. 72,000", status: "received", items: 20, notes: "Electronics batch", ordered_products: ["Cotton Round Neck T-Shirt"] },
+  { id: 4, po_number: "PO-2026-004", supplier: "Local Mart", branch: "Main Branch", order_date: "2026-06-04", expected_date: "2026-06-14", total_amount: "Rs. 15,000", status: "draft", items: 5, notes: "", ordered_products: ["Cotton Round Neck T-Shirt"] },
+  { id: 5, po_number: "PO-2026-005", supplier: "Premium Distributors", branch: "Kandy Branch", order_date: "2026-06-05", expected_date: "2026-06-15", total_amount: "Rs. 91,000", status: "approved", items: 30, notes: "Monthly restock", ordered_products: ["Running Sneakers"] },
+  { id: 6, po_number: "PO-2026-006", supplier: "Tech Wholesale", branch: "Galle Branch", order_date: "2026-06-06", expected_date: "2026-06-16", total_amount: "Rs. 33,000", status: "cancelled", items: 11, notes: "Cancelled by supplier", ordered_products: ["Vitamin C Tablets 500mg"] },
+  { id: 7, po_number: "PO-2026-007", supplier: "ABC Traders", branch: "Branch 02", order_date: "2026-06-07", expected_date: "2026-06-17", total_amount: "Rs. 56,500", status: "pending", items: 17, notes: "", ordered_products: ["Wireless Bluetooth Headphones", "Cotton Round Neck T-Shirt"] },
 ];
 
 const statusConfig = {
@@ -36,14 +36,24 @@ const StatusBadge = ({ status }) => {
 const suppliers = ["ABC Traders", "XYZ Supplies", "Global Imports", "Local Mart", "Premium Distributors", "Tech Wholesale"];
 const branches = ["Main Branch", "Branch 02", "Branch 03", "Kandy Branch", "Galle Branch"];
 
+const supplierProductsMap = {
+  "ABC Traders": ["Wireless Bluetooth Headphones", "Cotton Round Neck T-Shirt"],
+  "XYZ Supplies": ["Wireless Bluetooth Headphones"],
+  "Global Imports": ["Cotton Round Neck T-Shirt"],
+  "Local Mart": ["Cotton Round Neck T-Shirt"],
+  "Premium Distributors": ["Running Sneakers"],
+  "Tech Wholesale": ["Vitamin C Tablets 500mg"],
+};
+
 export default function PurchaseOrdersPage({ embedded }) {
   const [pos, setPOs] = useState(mockPOs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [showModal, setShowModal] = useState(false);
+  const [showAddPage, setShowAddPage] = useState(false);
+  const [showEditPage, setShowEditPage] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [viewItem, setViewItem] = useState(null);
-  const [form, setForm] = useState({ supplier: "", branch: "", order_date: "", expected_date: "", notes: "", status: "draft" });
+  const [form, setForm] = useState({ supplier: "", branch: "", order_date: "", expected_date: "", notes: "", status: "draft", ordered_products: [] });
   const [page, setPage] = useState(1);
   const PER_PAGE = 5;
 
@@ -56,19 +66,147 @@ export default function PurchaseOrdersPage({ embedded }) {
   const total = Math.ceil(filtered.length / PER_PAGE);
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  const openAdd = () => { setEditItem(null); setForm({ supplier: "", branch: "", order_date: "", expected_date: "", notes: "", status: "draft" }); setShowModal(true); };
-  const openEdit = (p) => { setEditItem(p); setForm({ supplier: p.supplier, branch: p.branch, order_date: p.order_date, expected_date: p.expected_date, notes: p.notes, status: p.status }); setShowModal(true); };
+  const openAdd = () => {
+    setEditItem(null);
+    setForm({ supplier: "", branch: "", order_date: "", expected_date: "", notes: "", status: "draft", ordered_products: [] });
+    setShowAddPage(true);
+  };
+  const openEdit = (p) => {
+    setEditItem(p);
+    setForm({ supplier: p.supplier, branch: p.branch, order_date: p.order_date, expected_date: p.expected_date, notes: p.notes, status: p.status, ordered_products: p.ordered_products || [] });
+    setShowEditPage(true);
+  };
   const handleSave = () => {
     if (!form.supplier || !form.branch) return;
     if (editItem) {
       setPOs(prev => prev.map(p => p.id === editItem.id ? { ...p, ...form } : p));
+      setShowEditPage(false);
     } else {
       const num = `PO-2026-00${pos.length + 1}`;
-      setPOs(prev => [...prev, { ...form, id: Date.now(), po_number: num, total_amount: "Rs. 0", items: 0 }]);
+      setPOs(prev => [...prev, { ...form, id: Date.now(), po_number: num, total_amount: "Rs. 0", items: form.ordered_products ? form.ordered_products.length : 0, ordered_products: form.ordered_products || [] }]);
+      setShowAddPage(false);
     }
-    setShowModal(false);
   };
   const handleDelete = (id) => setPOs(prev => prev.filter(p => p.id !== id));
+
+  const PurchaseOrderForm = ({ data, setData, onSave, onCancel, saveLabel }) => {
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">Supplier <span className="text-red-400">*</span></label>
+          <select value={data.supplier} onChange={e => setData(f => ({ ...f, supplier: e.target.value, ordered_products: [] }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+            <option value="">Select supplier...</option>
+            {suppliers.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {data.supplier && (
+            <div className="mt-3 space-y-1.5">
+              <p className="text-sm font-semibold text-slate-700">Select Products to Order</p>
+              <div className="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded-xl border border-gray-200 max-h-36 overflow-y-auto">
+                {supplierProductsMap[data.supplier] && supplierProductsMap[data.supplier].length > 0 ? (
+                  supplierProductsMap[data.supplier].map(prod => (
+                    <label key={prod} className="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-600 font-medium">
+                      <input
+                        type="checkbox"
+                        checked={data.ordered_products?.includes(prod)}
+                        onChange={e => {
+                          const checked = e.target.checked;
+                          setData(f => {
+                            const currentProds = f.ordered_products || [];
+                            const nextProds = checked
+                              ? [...currentProds, prod]
+                              : currentProds.filter(p => p !== prod);
+                            return { ...f, ordered_products: nextProds };
+                          });
+                        }}
+                        className="w-4 h-4 accent-blue-600 rounded cursor-pointer"
+                      />
+                      {prod}
+                    </label>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-400 font-medium">No products available</span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">Branch <span className="text-red-400">*</span></label>
+          <select value={data.branch} onChange={e => setData(f => ({ ...f, branch: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+            <option value="">Select branch...</option>
+            {branches.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Order Date" type="date" value={data.order_date} onChange={e => setData(f => ({ ...f, order_date: e.target.value }))} />
+          <FormField label="Expected Date" type="date" value={data.expected_date} onChange={e => setData(f => ({ ...f, expected_date: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+          <select value={data.status} onChange={e => setData(f => ({ ...f, status: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+            {Object.entries(statusConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+        </div>
+        <TextArea label="Notes" value={data.notes} onChange={e => setData(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes..." />
+        <div className="flex gap-3 pt-4 border-t border-gray-100">
+          <Button variant="secondary" onClick={onCancel} className="flex-1">Cancel</Button>
+          <Button variant="primary" onClick={onSave} className="flex-1">{saveLabel}</Button>
+        </div>
+      </div>
+    );
+  };
+
+  if (showAddPage) {
+    return (
+      <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Add Purchase Order</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Create a new purchase order</p>
+          </div>
+          <Button variant="primary" onClick={() => { setShowAddPage(false); }} className="shadow-sm">
+            Back to Purchase Orders <ChevronRight size={16} />
+          </Button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 w-full">
+          <PurchaseOrderForm
+            data={form}
+            setData={setForm}
+            onSave={handleSave}
+            onCancel={() => { setShowAddPage(false); }}
+            saveLabel="Add PO"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (showEditPage && editItem) {
+    return (
+      <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Edit Purchase Order</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Update purchase order details</p>
+          </div>
+          <Button variant="primary" onClick={() => { setShowEditPage(false); setEditItem(null); }} className="shadow-sm">
+            Back to Purchase Orders <ChevronRight size={16} />
+          </Button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 w-full">
+          <PurchaseOrderForm
+            data={form}
+            setData={setForm}
+            onSave={handleSave}
+            onCancel={() => { setShowEditPage(false); setEditItem(null); }}
+            saveLabel="Save Changes"
+          />
+        </div>
+      </div>
+    );
+  }
 
   const statCounts = Object.keys(statusConfig).reduce((acc, s) => ({ ...acc, [s]: pos.filter(p => p.status === s).length }), {});
 
@@ -169,41 +307,7 @@ export default function PurchaseOrdersPage({ embedded }) {
         />
       </div>
 
-      {showModal && (
-        <Modal title={editItem ? "Edit Purchase Order" : "New Purchase Order"} onClose={() => setShowModal(false)}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Supplier <span className="text-red-400">*</span></label>
-              <select value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                <option value="">Select supplier...</option>
-                {suppliers.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Branch <span className="text-red-400">*</span></label>
-              <select value={form.branch} onChange={e => setForm(f => ({ ...f, branch: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                <option value="">Select branch...</option>
-                {branches.map(b => <option key={b} value={b}>{b}</option>)}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Order Date" type="date" value={form.order_date} onChange={e => setForm(f => ({ ...f, order_date: e.target.value }))} />
-              <FormField label="Expected Date" type="date" value={form.expected_date} onChange={e => setForm(f => ({ ...f, expected_date: e.target.value }))} />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
-              <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-                {Object.entries(statusConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <TextArea label="Notes" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes..." />
-            <div className="flex gap-3 pt-2">
-              <Button variant="secondary" onClick={() => setShowModal(false)} className="flex-1">Cancel</Button>
-              <Button variant="primary" onClick={handleSave} className="flex-1">Save PO</Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      {/* Add/Edit Modal is replaced by full pages */}
 
       {viewItem && (
         <Modal title="Purchase Order Details" onClose={() => setViewItem(null)}>
@@ -227,6 +331,20 @@ export default function PurchaseOrdersPage({ embedded }) {
                 <span className="text-sm font-semibold text-slate-700">{value}</span>
               </div>
             ))}
+            <div className="border-t border-gray-100 pt-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Products Ordered</p>
+              <div className="flex flex-wrap gap-1.5">
+                {viewItem.ordered_products && viewItem.ordered_products.length > 0 ? (
+                  viewItem.ordered_products.map(p => (
+                    <span key={p} className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs rounded-full font-semibold border border-blue-100">
+                      {p}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400 font-medium">None</span>
+                )}
+              </div>
+            </div>
           </div>
         </Modal>
       )}

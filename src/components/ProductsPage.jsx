@@ -41,8 +41,8 @@ const mockProducts = [
     is_active: true,
     is_default: true,
     variants: [
-      { id: 1, sku: "SKU-001-BLK", barcode: "8901234567890", code: "V001", color: "Black", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "ABC Traders", is_default: true, is_active: true },
-      { id: 2, sku: "SKU-001-WHT", barcode: "8901234567891", code: "V002", color: "White", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "XYZ Supplies", is_default: false, is_active: true },
+      { id: 1, sku: "SKU-001-BLK", barcode: "8901234567890", code: "V001", color: "Black", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "ABC Traders", is_default: true, is_active: true, qty: 150 },
+      { id: 2, sku: "SKU-001-WHT", barcode: "8901234567891", code: "V002", color: "White", size: "One Size", material: "Plastic", style: "Over-ear", supplier_id: "XYZ Supplies", is_default: false, is_active: true, qty: 80 },
     ],
   },
   {
@@ -61,9 +61,9 @@ const mockProducts = [
     is_active: true,
     is_default: false,
     variants: [
-      { id: 3, sku: "SKU-002-SM", barcode: "8901234567892", code: "V003", color: "Red", size: "S", material: "Cotton", style: "Casual", supplier_id: "Global Imports", is_default: true, is_active: true },
-      { id: 4, sku: "SKU-002-MD", barcode: "8901234567893", code: "V004", color: "Red", size: "M", material: "Cotton", style: "Casual", supplier_id: "Local Mart", is_default: false, is_active: true },
-      { id: 5, sku: "SKU-002-LG", barcode: "8901234567894", code: "V005", color: "Blue", size: "L", material: "Cotton", style: "Casual", supplier_id: "ABC Traders", is_default: false, is_active: false },
+      { id: 3, sku: "SKU-002-SM", barcode: "8901234567892", code: "V003", color: "Red", size: "S", material: "Cotton", style: "Casual", supplier_id: "Global Imports", is_default: true, is_active: true, qty: 240 },
+      { id: 4, sku: "SKU-002-MD", barcode: "8901234567893", code: "V004", color: "Red", size: "M", material: "Cotton", style: "Casual", supplier_id: "Local Mart", is_default: false, is_active: true, qty: 110 },
+      { id: 5, sku: "SKU-002-LG", barcode: "8901234567894", code: "V005", color: "Blue", size: "L", material: "Cotton", style: "Casual", supplier_id: "ABC Traders", is_default: false, is_active: false, qty: 0 },
     ],
   },
   {
@@ -138,7 +138,8 @@ const VariantRow = ({ variant, onRemove, onChange }) => (
       <FormField label="Material" placeholder="Cotton" value={variant.material} onChange={e => onChange("material", e.target.value)} />
       <FormField label="Style" icon={Shirt} placeholder="Casual" value={variant.style} onChange={e => onChange("style", e.target.value)} />
       <SelectField label="Supplier" options={suppliers} value={variant.supplier_id} onChange={e => onChange("supplier_id", e.target.value)} />
-      <div className="flex items-center gap-4 col-span-2 pt-3">
+      <FormField label="Quantity" type="number" placeholder="0" value={variant.qty} onChange={e => onChange("qty", parseInt(e.target.value) || 0)} />
+      <div className="flex items-center gap-4 col-span-3 pt-3">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={variant.is_default} onChange={e => onChange("is_default", e.target.checked)} className="w-4 h-4 accent-blue-600" />
           <span className="text-sm text-slate-700 font-medium">Default</span>
@@ -160,7 +161,7 @@ const emptyProduct = {
   is_variant: false, is_active: true, is_default: false,
   variants: [],
 };
-const emptyVariant = { sku: "", barcode: "", code: "", color: "", size: "", material: "", style: "", supplier_id: "", is_default: false, is_active: true };
+const emptyVariant = { sku: "", barcode: "", code: "", color: "", size: "", material: "", style: "", supplier_id: "", is_default: false, is_active: true, qty: 0 };
 
 // ── Main Page ──────────────────────────────────────────────
 export default function ProductsPage({ embedded = false }) {
@@ -170,7 +171,7 @@ export default function ProductsPage({ embedded = false }) {
   const [filterCategory, setFilterCategory] = useState("all");
   const [showAddPage, setShowAddPage] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditPage, setShowEditPage] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [form, setForm] = useState(emptyProduct);
@@ -204,15 +205,6 @@ export default function ProductsPage({ embedded = false }) {
   const toggleVariantExpand = (id) =>
     setExpandedVariants(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const addVariantToForm = () =>
-    setForm(f => ({ ...f, variants: [...f.variants, { ...emptyVariant, id: Date.now() }] }));
-
-  const removeVariantFromForm = (vid) =>
-    setForm(f => ({ ...f, variants: f.variants.filter(v => v.id !== vid) }));
-
-  const updateVariantInForm = (vid, key, val) =>
-    setForm(f => ({ ...f, variants: f.variants.map(v => v.id === vid ? { ...v, [key]: val } : v) }));
-
   const handleAdd = () => {
     setProducts([...products, { ...form, id: Date.now() }]);
     setShowAddPage(false);
@@ -221,7 +213,7 @@ export default function ProductsPage({ embedded = false }) {
 
   const handleEdit = () => {
     setProducts(products.map(p => p.id === selectedProduct.id ? { ...selectedProduct } : p));
-    setShowEditModal(false);
+    setShowEditPage(false);
   };
 
   const handleDelete = () => {
@@ -229,108 +221,143 @@ export default function ProductsPage({ embedded = false }) {
     setShowDeleteModal(false);
   };
 
-  const ProductForm = ({ data, setData, onSave, onCancel, saveLabel }) => (
-    <>
-      {/* Section: Basic Info */}
-      <div className="mb-4">
-        <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-          <Package size={13} /> Basic Information
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Product Code" icon={Hash} placeholder="PRD-001" required value={data.product_code} onChange={e => setData({ ...data, product_code: e.target.value })} />
-          <FormField label="Product Name" icon={Package} placeholder="Product name" required value={data.product_name} onChange={e => setData({ ...data, product_name: e.target.value })} />
-          <FormField label="Slug" placeholder="product-name-slug" value={data.slug} onChange={e => setData({ ...data, slug: e.target.value })} />
-          <SelectField label="Brand" icon={Star} options={brands} value={data.brand_id} onChange={e => setData({ ...data, brand_id: e.target.value })} />
-          <div className="col-span-2">
-            <TextArea label="Description" placeholder="Product description..." value={data.description} onChange={e => setData({ ...data, description: e.target.value })} />
-          </div>
-        </div>
-      </div>
+  const ProductForm = ({ data, setData, onSave, onCancel, saveLabel }) => {
+    const addVariant = () =>
+      setData(d => ({ ...d, variants: [...(d.variants || []), { ...emptyVariant, id: Date.now() }] }));
 
-      {/* Section: Category */}
-      <div className="mb-4">
-        <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-          <Tag size={13} /> Category & Units
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Main Category" icon={Tag} options={mainCategories} value={data.main_category_id} onChange={e => setData({ ...data, main_category_id: e.target.value, sub_category_id: "" })} />
-          <SelectField label="Sub Category" icon={Tag} options={subCategories[data.main_category_id] || []} value={data.sub_category_id} onChange={e => setData({ ...data, sub_category_id: e.target.value })} />
-          <SelectField label="Unit" icon={Box} options={units} value={data.unit_id} onChange={e => setData({ ...data, unit_id: e.target.value })} />
-          <SelectField label="Measurement" icon={Ruler} options={measurements} value={data.measurement_id} onChange={e => setData({ ...data, measurement_id: e.target.value })} />
-          <SelectField label="Container" icon={FlaskConical} options={containers} value={data.container_id} onChange={e => setData({ ...data, container_id: e.target.value })} />
-        </div>
-      </div>
+    const removeVariant = (vid) =>
+      setData(d => ({ ...d, variants: (d.variants || []).filter(v => v.id !== vid) }));
 
-      {/* Section: Flags */}
-      <div className="mb-4">
-        <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3">Settings</p>
-        <div className="flex flex-wrap items-center gap-5">
-          {[
-            { key: "is_active", label: "Active" },
-            { key: "is_default", label: "Default" },
-            { key: "is_variant", label: "Has Variants" },
-          ].map(({ key, label }) => (
-            <CheckboxField
-              key={key}
-              id={key}
-              label={label}
-              checked={data[key]}
-              onChange={e => setData({ ...data, [key]: e.target.checked })}
-            />
-          ))}
-        </div>
-      </div>
+    const updateVariant = (vid, key, val) =>
+      setData(d => ({ ...d, variants: (d.variants || []).map(v => v.id === vid ? { ...v, [key]: val } : v) }));
 
-      {/* Section: Variants */}
-      {data.is_variant && (
+    return (
+      <>
+        {/* Section: Basic Info */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
-              <Layers size={13} /> Product Variants
-            </p>
-            <Button onClick={addVariantToForm} icon={Plus}>Add Variant</Button>
+          <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Package size={13} /> Basic Information
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Product Code" icon={Hash} placeholder="PRD-001" required value={data.product_code} onChange={e => setData({ ...data, product_code: e.target.value })} />
+            <FormField label="Product Name" icon={Package} placeholder="Product name" required value={data.product_name} onChange={e => setData({ ...data, product_name: e.target.value })} />
+            <FormField label="Slug" placeholder="product-name-slug" value={data.slug} onChange={e => setData({ ...data, slug: e.target.value })} />
+            <SelectField label="Brand" icon={Star} options={brands} value={data.brand_id} onChange={e => setData({ ...data, brand_id: e.target.value })} />
+            <div className="col-span-2">
+              <TextArea label="Description" placeholder="Product description..." value={data.description} onChange={e => setData({ ...data, description: e.target.value })} />
+            </div>
           </div>
-          {data.variants.length === 0 && (
-            <p className="text-sm text-slate-600 text-center py-4 bg-gray-50 rounded-xl">No variants added yet. Click "Add Variant".</p>
-          )}
-          <div className="space-y-3">
-            {data.variants.map(v => (
-              <VariantRow
-                key={v.id}
-                variant={v}
-                onRemove={() => removeVariantFromForm(v.id)}
-                onChange={(key, val) => updateVariantInForm(v.id, key, val)}
+        </div>
+
+        {/* Section: Category */}
+        <div className="mb-4">
+          <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Tag size={13} /> Category & Units
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Main Category" icon={Tag} options={mainCategories} value={data.main_category_id} onChange={e => setData({ ...data, main_category_id: e.target.value, sub_category_id: "" })} />
+            <SelectField label="Sub Category" icon={Tag} options={subCategories[data.main_category_id] || []} value={data.sub_category_id} onChange={e => setData({ ...data, sub_category_id: e.target.value })} />
+            <SelectField label="Unit" icon={Box} options={units} value={data.unit_id} onChange={e => setData({ ...data, unit_id: e.target.value })} />
+            <SelectField label="Measurement" icon={Ruler} options={measurements} value={data.measurement_id} onChange={e => setData({ ...data, measurement_id: e.target.value })} />
+            <SelectField label="Container" icon={FlaskConical} options={containers} value={data.container_id} onChange={e => setData({ ...data, container_id: e.target.value })} />
+          </div>
+        </div>
+
+        {/* Section: Flags */}
+        <div className="mb-4">
+          <p className="text-sm font-bold text-blue-700 uppercase tracking-widest mb-3">Settings</p>
+          <div className="flex flex-wrap items-center gap-5">
+            {[
+              { key: "is_active", label: "Active" },
+              { key: "is_default", label: "Default" },
+              { key: "is_variant", label: "Has Variants" },
+            ].map(({ key, label }) => (
+              <CheckboxField
+                key={key}
+                id={key}
+                label={label}
+                checked={data[key]}
+                onChange={e => setData({ ...data, [key]: e.target.checked })}
               />
             ))}
           </div>
         </div>
-      )}
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button variant="primary" onClick={onSave}>{saveLabel}</Button>
-      </div>
-    </>
-  );
+        {/* Section: Variants */}
+        {data.is_variant && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-bold text-blue-700 uppercase tracking-widest flex items-center gap-2">
+                <Layers size={13} /> Product Variants
+              </p>
+              <Button onClick={addVariant} icon={Plus}>Add Variant</Button>
+            </div>
+            {data.variants.length === 0 && (
+              <p className="text-sm text-slate-600 text-center py-4 bg-gray-50 rounded-xl">No variants added yet. Click "Add Variant".</p>
+            )}
+            <div className="space-y-3">
+              {data.variants.map(v => (
+                <VariantRow
+                  key={v.id}
+                  variant={v}
+                  onRemove={() => removeVariant(v.id)}
+                  onChange={(key, val) => updateVariant(v.id, key, val)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+          <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+          <Button variant="primary" onClick={onSave}>{saveLabel}</Button>
+        </div>
+      </>
+    );
+  };
 
   // If showing the add product page, render as full-page form
   if (showAddPage) {
     return (
       <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="secondary" onClick={() => { setShowAddPage(false); setForm(emptyProduct); }} icon={ChevronLeft}>Back to Products</Button>
+        <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Add New Product</h1>
             <p className="text-sm text-slate-400 mt-0.5">Create a new product with variants</p>
           </div>
+          <Button variant="primary" onClick={() => { setShowAddPage(false); setForm(emptyProduct); }}>Back to Products <ChevronRight/></Button>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <ProductForm
+          <ProductForm   
             data={form} setData={setForm}
             onSave={handleAdd}
             onCancel={() => { setShowAddPage(false); setForm(emptyProduct); }}
             saveLabel="Add Product"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // If showing the edit product page, render as full-page form
+  if (showEditPage && selectedProduct) {
+    return (
+      <div className="p-5 min-h-full bg-gray-50" style={{ fontFamily: "'Segoe UI', sans-serif" }}>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Edit Product</h1>
+            <p className="text-sm text-slate-400 mt-0.5">Update product details and variants</p>
+          </div>
+          <Button variant="primary" onClick={() => { setShowEditPage(false); setSelectedProduct(null); }} icon={ChevronLeft}>Back to Products</Button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <ProductForm
+            data={selectedProduct} setData={setSelectedProduct}
+            onSave={handleEdit}
+            onCancel={() => { setShowEditPage(false); setSelectedProduct(null); }}
+            saveLabel="Save Changes"
           />
         </div>
       </div>
@@ -465,7 +492,7 @@ export default function ProductsPage({ embedded = false }) {
                     <div className="flex justify-center">
                       <ActionButtons
                         onView={() => { setSelectedProduct(p); setShowViewModal(true); }}
-                        onEdit={() => { setSelectedProduct({ ...p, variants: [...p.variants] }); setShowEditModal(true); }}
+                        onEdit={() => { setSelectedProduct({ ...p, variants: [...p.variants] }); setShowEditPage(true); }}
                         onDelete={() => { setSelectedProduct(p); setShowDeleteModal(true); }}
                       />
                     </div>
@@ -482,16 +509,17 @@ export default function ProductsPage({ embedded = false }) {
                             <div className="flex items-center justify-between">
                               <span className="font-semibold text-slate-900 font-mono">{v.sku}</span>
                               <div className="flex items-center gap-1">
-                                {v.is_default && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-sm">Default</span>}
+                                {v.is_default && <span className="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Default</span>}
                                 <Badge active={v.is_active} />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-3 text-slate-700">
-                              {v.color && <span>🎨 {v.color}</span>}
-                              {v.size && <span>📐 {v.size}</span>}
-                              {v.material && <span>🧵 {v.material}</span>}
-                              {v.style && <span>👗 {v.style}</span>}
-                              <span className="col-span-2 font-mono text-slate-700">📦 {v.barcode}</span>
+                            <div className="grid grid-cols-2 gap-x-3 text-slate-700 text-xs">
+                              {v.color && <span><span className="font-semibold text-slate-500">Color :</span> {v.color}</span>}
+                              {v.size && <span><span className="font-semibold text-slate-500">Size :</span> {v.size}</span>}
+                              {v.material && <span><span className="font-semibold text-slate-500">Material :</span> {v.material}</span>}
+                              {v.style && <span><span className="font-semibold text-slate-500">Style :</span> {v.style}</span>}
+                              <span className="col-span-2"><span className="font-semibold text-slate-500">Qty :</span> <span className="font-semibold text-blue-600">{v.qty || 0}</span></span>
+                              {v.barcode && <span className="col-span-2 font-mono"><span className="font-semibold text-slate-500">Barcode :</span> {v.barcode}</span>}
                             </div>
                           </div>
                         ))}
@@ -515,16 +543,7 @@ export default function ProductsPage({ embedded = false }) {
 
 
 
-      {/* ── Edit Modal ── */}
-      {showEditModal && selectedProduct && (
-        <Modal title="Edit Product" onClose={() => setShowEditModal(false)} wide>
-          <ProductForm
-            data={selectedProduct} setData={setSelectedProduct}
-            onSave={handleEdit} onCancel={() => setShowEditModal(false)}
-            saveLabel="Save Changes"
-          />
-        </Modal>
-      )}
+      {/* Edit modal replaced by full page edit view */}
 
       {/* ── View Modal ── */}
       {showViewModal && selectedProduct && (
@@ -540,7 +559,7 @@ export default function ProductsPage({ embedded = false }) {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <Badge active={selectedProduct.is_active} />
-                {selectedProduct.is_default && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-sm rounded-full font-medium">Default</span>}
+                {selectedProduct.is_default && <span className="px-2.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">Default</span>}
               </div>
             </div>
 
@@ -578,14 +597,18 @@ export default function ProductsPage({ embedded = false }) {
                     <div key={v.id} className="border border-gray-100 rounded-xl p-3 text-sm">
                       <div className="flex justify-between mb-1">
                         <span className="font-semibold text-slate-900 font-mono">{v.sku}</span>
-                        <Badge active={v.is_active} />
+                        <div className="flex items-center gap-1">
+                          {v.is_default && <span className="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Default</span>}
+                          <Badge active={v.is_active} />
+                        </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-2 text-slate-700">
-                        {v.color && <span>🎨 {v.color}</span>}
-                        {v.size && <span>📐 {v.size}</span>}
-                        {v.material && <span>🧵 {v.material}</span>}
-                        {v.style && <span>👗 {v.style}</span>}
-                        <span className="col-span-2 font-mono text-slate-700">📦 {v.barcode}</span>
+                      <div className="grid grid-cols-3 gap-2 text-slate-700 text-xs">
+                        {v.color && <span><span className="font-semibold text-slate-500">Color :</span> {v.color}</span>}
+                        {v.size && <span><span className="font-semibold text-slate-500">Size :</span> {v.size}</span>}
+                        {v.material && <span><span className="font-semibold text-slate-500">Material :</span> {v.material}</span>}
+                        {v.style && <span><span className="font-semibold text-slate-500">Style :</span> {v.style}</span>}
+                        <span className="col-span-3"><span className="font-semibold text-slate-500">Qty :</span> <span className="font-semibold text-blue-600">{v.qty || 0}</span></span>
+                        {v.barcode && <span className="col-span-3 font-mono"><span className="font-semibold text-slate-500">Barcode :</span> {v.barcode}</span>}
                       </div>
                     </div>
                   ))}

@@ -55,3 +55,9 @@ code {
 .nav-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Center all table headers globally */
+table th {
+  text-align: center !important;
+}
+

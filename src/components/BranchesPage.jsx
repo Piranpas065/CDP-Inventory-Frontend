@@ -94,25 +94,27 @@ const BranchCard = ({ branch, onView, onEdit, onDelete }) => {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-800">{branch.name}</h3>
-              {branch.is_main_branch && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
-                  <Star size={10} fill="currentColor" /> Main
-                </span>
-              )}
             </div>
             <p className="text-xs text-gray-400 mt-0.5">Code: <span className="font-mono font-semibold text-slate-900">{branch.branch_code}</span></p>
           </div>
         </div>
 
         {/* Status + Menu */}
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium
-            ${branch.is_active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
-            {branch.is_active
-              ? <><CheckCircle size={11} /> Active</>
-              : <><XCircle size={11} /> Inactive</>}
-          </span>
-          <div className="relative">
+        <div className="flex items-start gap-2">
+          <div className="flex flex-col items-end gap-1.5">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium
+              ${branch.is_active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+              {branch.is_active
+                ? <><CheckCircle size={11} /> Active</>
+                : <><XCircle size={11} /> Inactive</>}
+            </span>
+            {branch.is_main_branch && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">
+                <Star size={10} fill="currentColor" /> Main
+              </span>
+            )}
+          </div>
+          <div className="relative mt-0.5">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"

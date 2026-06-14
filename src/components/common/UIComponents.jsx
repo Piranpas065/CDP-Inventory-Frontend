@@ -7,14 +7,14 @@ import {
 
 // ── Button Component ─────────────────────────────────────────
 export function Button({ variant = "primary", icon: Icon, children, className = "", ...props }) {
-  const baseStyle = "inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2";
+  const baseStyle = "inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition shadow-sm focus:outline-none";
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200 focus:ring-blue-500",
-    secondary: "bg-white border border-gray-200 text-slate-700 hover:bg-gray-50 focus:ring-gray-300",
-    outline: "bg-gray-100 text-gray-600 hover:bg-gray-200 focus:ring-gray-300",
-    danger: "bg-red-600 text-white hover:bg-red-700 shadow-red-200 focus:ring-red-500",
-    dangerOutline: "bg-red-50 text-red-500 hover:bg-red-100 focus:ring-red-200",
-    amberOutline: "bg-amber-50 text-amber-600 hover:bg-amber-100 focus:ring-amber-200",
+    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200",
+    secondary: "bg-white border border-gray-200 text-slate-700 hover:bg-gray-50",
+    outline: "bg-gray-100 text-gray-600 hover:bg-gray-200",
+    danger: "bg-red-600 text-white hover:bg-red-700 shadow-red-200",
+    dangerOutline: "bg-red-50 text-red-500 hover:bg-red-100",
+    amberOutline: "bg-amber-50 text-amber-600 hover:bg-amber-100",
   };
   return (
     <button className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
